@@ -1,16 +1,17 @@
 import express, { type Request, type Response } from 'express';
 
 import cors from 'cors'; 
-import dotenv from 'dotenv';
 import { createServer } from 'node:http';
 import { Server  } from 'socket.io';
-dotenv.config();
+import { serverConfig } from './config/index.js';
+import { connectDB } from './config/db.js';
+//import { seedUser } from './seeders/seed.js';
+
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-const PORT=process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
@@ -30,6 +31,9 @@ io.on('connection',(socket)=>{
     })
 })
 
-server.listen(PORT,()=>{
-    console.log(`server is running on ${PORT}`)
+server.listen(serverConfig.port, async()=>{
+    console.log(`server is running on ${serverConfig.port}`)
+    await connectDB();
+    //await seedUser()
+    
 })
