@@ -1,2 +1,2 @@
-export declare function seedUser(): Promise<void>;
+export {};
 //# sourceMappingURL=seed.d.ts.map
