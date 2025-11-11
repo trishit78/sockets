@@ -1,3 +1,4 @@
+
 // import bcrypt from "bcryptjs";
 // import { connectDB } from "../config/db.js";
 // import User from "../models/User.js";
@@ -5,7 +6,7 @@
 
 
 
-// const DummyUser = [
+//\\ const DummyUser = [
 //     {
 //       "name": "Trishit Bhowmik",
 //       "email": "trishit@example.com",
