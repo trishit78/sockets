@@ -7,6 +7,8 @@ import { authConfig, serverConfig } from './config/index.js';
 import { connectDB } from './config/db.js';
 import authRouter from './router/authRouter.js';
 import User from './models/User.js';
+import { Membership } from './models/Membership.js';
+import { Message } from './models/Message.js';
 //import { seedUser } from './seeders/seed.js';
 
 
@@ -61,6 +63,90 @@ io.on('connection', async (socket) => {
         }
 
         console.log('a user connected', socket.id, userEmail);
+
+        socket.on('join-room',async({roomId})=>{
+            try {
+                if(!roomId){
+                    socket.emit('error',{message:'roomId is required'});
+                    return;
+                }
+                const membership = await Membership.findOne({
+                    userId:userId,
+                    roomId:roomId
+                });
+                if(!membership){
+                    socket.emit('error',{message:'Access denied to this room'});
+                    return;
+                }
+
+                const roomName = `room:${roomId}`;
+                socket.join(roomName);
+                console.log(`User ${userId} joined ${roomName}`);
+
+                io.to(roomName).emit('user-joined',{
+                    userId,
+                    roomId
+                });
+
+            } catch (error) {
+                console.log('error in join room',error);
+                socket.emit('error',{message:'Failed to join room'});
+            }
+        })
+
+        socket.on('send-message',async({roomId,content})=>{
+            try {
+                if(!roomId){
+                    socket.emit('error',{message:'roomId is required'});
+                    return;
+                }
+                const membership = await Membership.findOne({
+                    userId:userId,
+                    roomId:roomId
+                });
+                if(!membership){
+                    socket.emit('error',{message:'Access denied to this room'});
+                    return;
+                }
+                if(!content){
+                    socket.emit('error',{message:'there is not content in the message'});
+                    return;
+                }
+                   // @ts-ignore
+                const savedMessage = await Message.create({content,senderId:socket.userId,roomId});
+
+
+                console.log('Message is',savedMessage);
+
+                io.to('room:'+roomId).emit('new-message',savedMessage);
+
+
+            } catch (error) {
+                console.log('Error in send message',error);
+                socket.emit('error',{message:'Failed to send message'});
+                
+            }
+        })
+
+        socket.on('leave-room',async({roomId})=>{
+            try {
+                if(!roomId){
+                    socket.emit('error',{message:'roomId is required'});
+                    return;
+                }
+                const roomName = `room:${roomId}`;
+                socket.leave(roomName);
+                console.log(`User ${userId} left ${roomName}`);
+                io.to(roomName).emit('user-left',{
+                    userId,roomId
+                })
+
+            } catch (error) {
+                console.log('error in leave room',error);
+                socket.emit('error',{message:'Failed to leave room'});
+            }
+        })
+
 
         socket.on('connect_error',(error)=>{
             if(error.message === 'Authentication error'){

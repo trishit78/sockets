@@ -20,12 +20,10 @@ const roomSchema = new mongoose.Schema<IRoom>({
     },
     isPrivate:{
         type:Boolean,
-        unique:true,
         default:false
     },
     privateId:{
         type:String,
-        required:true,
         default:null,
     }
 },{
